@@ -9,7 +9,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 class MeuBot : TelegramLongPollingBot() {
     fun validarCPF(cpf: String): Boolean {
 
-    val numeros = cpf.filter { it.isDigit() }
+    val numeros =  { it.isDigit() }
 
     if (numeros.length != 11) return false
 
