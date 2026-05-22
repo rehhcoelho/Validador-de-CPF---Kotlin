@@ -70,7 +70,6 @@ fun extrairObjetos(json: String, campo: String): List<String> {
     return objetos
 }
 
-// ── Telegram ──────────────────────────────────────────────────────────────────
 
 fun sendMessage(chatId: Long, text: String) {
     val safeText = text
@@ -112,4 +111,84 @@ fun respostaCpf(cpfRaw: String): String {
         "CPF $fmt é VÁLIDO."
     else
         "CPF $fmt é INVÁLIDO."
+}
+
+fun processarMensagem(msgJson: String) {
+    val chatId = extrairLong(msgJson, "id") ?: return
+    val texto = extrairString(msgJson, "text") ?: return
+
+    when {
+        texto.startsWith("/start") -> sendMessage(
+            chatId,
+            "Olá! Sou o bot validador de CPF.\n\nEnvie um CPF diretamente ou use:\n/validar 000.000.000-00"
+        )
+
+        texto.startsWith("/validar") -> {
+            val cpfRaw = texto.removePrefix("/validar").trim()
+            if (cpfRaw.isBlank()) {
+                sendMessage(chatId, "⚠️ Uso: /validar 000.000.000-00")
+            } else {
+                sendMessage(chatId, respostaCpf(cpfRaw))
+            }
+        }
+
+        limparCpf(texto).length == 11 -> sendMessage(chatId, respostaCpf(texto))
+
+        else -> sendMessage(chatId, "❓ Envie um CPF (com ou sem formatação) ou use /validar 000.000.000-00")
+    }
+}
+
+fun main() {
+    println("Bot rodando... (Ctrl+C para parar)")
+    var offset = 0L
+
+    while (true) {
+        try {
+            val response = getUpdates(offset)
+            val updates = extrairObjetos(response, "result")
+
+            for (update in updates) {
+                val updateId = extrairLong(update, "update_id") ?: continue
+                val messageJson = extrairObjetos(update, "message").firstOrNull()
+                    ?: extrairObjetos(update, "message").firstOrNull()
+
+                // Extrai o bloco "message" manualmente
+                val msgStart = update.indexOf(""""message"""")
+                if (msgStart != -1) {
+                    val braceStart = update.indexOf('{', msgStart)
+                    if (braceStart != -1) {
+                        var depth = 0
+                        var end = braceStart
+                        for (i in braceStart until update.length) {
+                            when (update[i]) {
+                                '{' -> depth++
+                                '}' -> { depth--; if (depth == 0) { end = i; break } }
+                            }
+                        }
+                        val msgBlock = update.substring(braceStart, end + 1)
+
+                        // Extrai o chat id de dentro do bloco "chat"
+                        val chatStart = msgBlock.indexOf(""""chat"""")
+                        val chatId = if (chatStart != -1) {
+                            val chatBrace = msgBlock.indexOf('{', chatStart)
+                            val chatBlock = msgBlock.substring(chatBrace)
+                            extrairLong(chatBlock, "id")
+                        } else null
+
+                        if (chatId != null) {
+                            val msgComChat = msgBlock.replace(
+                                Regex(""""chat"\s*:\s*\{[^}]*\}"""),
+                                """"id":$chatId"""
+                            )
+                            processarMensagem(msgComChat)
+                        }
+                    }
+                }
+                offset = updateId + 1
+            }
+        } catch (e: Exception) {
+            println("Erro: ${e.message}")
+            Thread.sleep(3000)
+        }
+    }
 }
