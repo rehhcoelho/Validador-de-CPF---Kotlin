@@ -1,14 +1,15 @@
-import io.github.cdimascio.dotenv.dotenv
+package org.example
 
+import io.github.cdimascio.dotenv.dotenv
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-const dotenv = dotenv()
+val dotenv = dotenv()
 
-const val BOT_TOKEN = dotenv["TOKEN_TESTE"]
-const val BASE_URL = "https://api.telegram.org/bot$BOT_TOKEN"
+val BOT_TOKEN = dotenv["TOKEN_TESTE"]
+val BASE_URL = "https://api.telegram.org/bot$BOT_TOKEN"
 
 val client = HttpClient.newHttpClient()
 
