@@ -138,9 +138,9 @@ fun formatarCpf(cpf: String): String {
 fun respostaCpf(cpfRaw: String): String {
     val fmt = formatarCpf(cpfRaw)
     return if (validarCpf(cpfRaw))
-        "CPF $fmt é VÁLIDO."
+        "CPF $fmt é VÁLIDO ✅."
     else
-        "CPF $fmt é INVÁLIDO."
+        "CPF $fmt é INVÁLIDO ❌."
 }
 
 
