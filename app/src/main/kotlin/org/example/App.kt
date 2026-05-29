@@ -6,6 +6,8 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
+// nome do bot: @VALIDATORcpfBOT
+
 // Carrega variáveis de ambiente do arquivo .env
 val dotenv = dotenv()
 
